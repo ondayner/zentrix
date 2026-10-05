@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title id="site-title">Zentrix GPS - Rastreo Satelital</title>
+    <meta name="description" content="Sistema de rastreo satelital GPS de máxima precisión en Venezuela. Monitoreo 24/7 en tiempo real, apagado de motor remoto y geocercas para vehículos y motos.">
+    
+    <link rel="icon" href="assets/img/isotipo_zentrix_morado-sin.png">
+    <link rel="stylesheet" href="assets/css/style.css">
+     
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            cyan: 'var(--accent-primary)',
+                            red: '#e11d48',
+                            bg: 'var(--bg-main)',
+                            card: 'var(--bg-card)',
+                            text: 'var(--text-main)',
+                            muted: 'var(--text-muted)',
+                            border: 'var(--border-color)',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Space Grotesk', 'Inter', 'sans-serif'],
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-12px)' },
+                        }
+                    },
+                    animation: {
+                        float: 'float 5s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="relative selection:bg-purple-500 selection:text-white">
+
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- BOTÓN FLOTANTE WHATSAPP -->
+    <a id="btn-float-wa" href="#" target="_blank" rel="noopener noreferrer" 
+       class="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 border border-cyber-border"
+       title="Contactar por WhatsApp">
+        <svg class="w-7 h-7 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+        </svg>
+    </a>
+
+    <!-- HOLOGRAMA SCROLL 3D -->
+    <div id="scroll-hologram-wrapper" class="flex items-center justify-center">
+        <div id="hologram-core" class="relative w-full h-full flex items-center justify-center">
+            <svg class="w-full h-full opacity-90" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="100" cy="100" r="90" stroke="var(--accent-primary)" stroke-width="1.5" stroke-dasharray="6 6" opacity="0.4" class="animate-spin-slow"/>
+                <circle cx="100" cy="100" r="70" stroke="#e11d48" stroke-width="1" stroke-dasharray="40 10" opacity="0.5"/>
+                <line x1="100" y1="10" x2="100" y2="190" stroke="var(--border-color)" stroke-width="1"/>
+                <line x1="10" y1="100" x2="190" y2="100" stroke="var(--border-color)" stroke-width="1"/>
+                <g class="animate-pulse">
+                    <rect x="85" y="85" width="30" height="30" rx="6" fill="var(--bg-card)" stroke="var(--accent-primary)" stroke-width="2"/>
+                    <path d="M55 92H80V108H55Z" fill="var(--accent-primary)" opacity="0.7"/>
+                    <path d="M120 92H145V108H120Z" fill="var(--accent-primary)" opacity="0.7"/>
+                    <circle cx="100" cy="100" r="5" fill="#e11d48"/>
+                </g>
+            </svg>
+        </div>
+    </div>
+
+    <div class="pointer-events-none fixed inset-0 z-10 scanline-overlay opacity-20"></div>
+
+    <div class="relative z-20 flex flex-col min-h-screen">
+
+        <!-- HEADER CON LOGO NOTABLE Y CLARO -->
+        <header class="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 transition-all duration-300" id="navbar">
+            <div class="max-w-7xl mx-auto flex items-center justify-between glass-panel rounded-2xl px-5 sm:px-8 py-3.5 shadow-lg">
+                <a href="#hero" class="flex items-center gap-3 group">
+                    <img src="assets/img/logotio_zentrix_morado-sin.png" alt="Zentrix GPS" 
+                        class="h-14 sm:h-16 w-auto object-contain logo-glow-nav transition-all duration-300 group-hover:scale-105">
+                </a>
+
+                <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-cyber-muted">
+                    <a href="#hero" class="hover:text-purple-500 transition-colors" data-i18n="nav_start">Inicio</a>
+                    <a href="#services" class="hover:text-purple-500 transition-colors" data-i18n="nav_services">Servicios</a>
+                    <a href="#fleet" class="hover:text-purple-500 transition-colors" data-i18n="nav_fleet">Flota</a>
+                    <a href="#stats" class="hover:text-purple-500 transition-colors" data-i18n="nav_stats">Monitoreo</a>
+                    <a href="#team" class="hover:text-purple-500 transition-colors" data-i18n="nav_team">Equipo</a>
+                    <a href="#contact" class="hover:text-purple-500 transition-colors" data-i18n="nav_contact">Contacto</a>
+                </nav>
+
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <a id="link-header-platform" href="#" target="_blank" rel="noopener noreferrer" 
+                       class="hidden lg:inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-600 dark:text-purple-300 hover:bg-purple-600 hover:text-white font-bold text-xs transition-all duration-300">
+                        <i data-lucide="log-in" class="w-4 h-4"></i>
+                        <span data-i18n="web_platform">Plataforma Web</span>
+                    </a>
+
+                    <button id="lang-toggle-btn" onclick="toggleLanguage()" class="p-2.5 rounded-xl glass-panel hover:border-purple-500 text-cyber-text text-xs font-mono font-bold flex items-center gap-1">
+                        <i data-lucide="globe" class="w-4 h-4 text-purple-500"></i>
+                        <span id="lang-indicator">ES</span>
+                    </button>
+
+                    <button id="theme-toggle-btn" onclick="toggleTheme()" class="p-2.5 rounded-xl glass-panel hover:border-purple-500 text-cyber-text text-xs font-bold flex items-center justify-center" title="Cambiar Tema">
+                        <i data-lucide="sun" id="icon-sun" class="w-4 h-4 text-amber-500"></i>
+                        <i data-lucide="moon" id="icon-moon" class="w-4 h-4 text-purple-400 hidden"></i>
+                    </button>
+
+                    <button class="md:hidden p-2 text-cyber-text" id="mobile-menu-btn" onclick="toggleMobileMenu()">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="mobile-drawer" class="hidden md:hidden max-w-7xl mx-auto mt-2 glass-panel rounded-2xl p-6 flex-col gap-4 text-center font-medium">
+                <a href="#hero" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_start">Inicio</a>
+                <a href="#services" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_services">Servicios</a>
+                <a href="#fleet" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_fleet">Flota</a>
+                <a href="#stats" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_stats">Monitoreo</a>
+                <a href="#team" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_team">Equipo</a>
+                <a href="#contact" onclick="toggleMobileMenu()" class="py-2 text-cyber-text hover:text-purple-500" data-i18n="nav_contact">Contacto</a>
+                <a id="link-mobile-platform" href="#" target="_blank" rel="noopener noreferrer" class="py-3 rounded-xl bg-purple-600 text-white font-bold text-sm" data-i18n="web_platform">
+                    Plataforma Web
+                </a>
+            </div>
+        </header>
+
+        <!-- SECCIÓN 1: HERO -->
+        <section id="hero" class="relative min-h-screen flex items-center pt-28 pb-16 px-4 sm:px-6">
+            <div class="max-w-7xl mx-auto w-full grid lg:grid-cols-12 gap-12 items-center">
+                
+                <div class="lg:col-span-7 text-center lg:text-left space-y-8 z-20">
+                    <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-cyber-text leading-[1.1]">
+                        <span data-i18n="hero_title_1">CONTROL TOTAL</span> <br>
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500">
+                            <span data-i18n="hero_title_2">EN TIEMPO REAL</span>
+                        </span> <br>
+                        <span data-i18n="hero_title_3">CON ZENTRIX</span>
+                    </h1>
+
+                    <p class="text-base sm:text-xl text-cyber-muted max-w-2xl font-light leading-relaxed mx-auto lg:mx-0" data-i18n="hero_subtitle">
+                        Sistema de rastreo satelital de máxima precisión. Monitoreo constante, apagado de motor remoto e instalaciones discretas garantizadas.
+                    </p>
+
+                    <div class="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-4">
+                        <a id="link-hero-platform" href="#" target="_blank" rel="noopener noreferrer" 
+                           class="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-base hover:scale-105 transition-all shadow-xl shadow-purple-600/30">
+                            <i data-lucide="shield-check" class="w-5 h-5"></i>
+                            <span data-i18n="hero_btn_platform">INGRESAR A LA PLATAFORMA</span>
+                        </a>
+
+                        <a href="#contact" 
+                           class="flex items-center gap-3 px-6 py-4 rounded-2xl glass-panel hover:border-purple-500 hover:scale-105 transition-all font-bold text-cyber-text">
+                            <i data-lucide="calendar" class="w-5 h-5 text-purple-500"></i>
+                            <span data-i18n="hero_btn_install">Agendar Instalación</span>
+                        </a>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-4 pt-8 border-t border-cyber-border max-w-xl mx-auto lg:mx-0">
+                        <div>
+                            <div class="text-xl sm:text-3xl font-black text-cyber-text font-mono">10+</div>
+                            <div class="text-[11px] text-cyber-muted uppercase tracking-wider mt-1" data-i18n="stat_exp">Años de Experiencia</div>
+                        </div>
+                        <div>
+                            <div class="text-xl sm:text-3xl font-black text-purple-500 font-mono">100%</div>
+                            <div class="text-[11px] text-cyber-muted uppercase tracking-wider mt-1" data-i18n="stat_discreet">Instalación Oculta</div>
+                        </div>
+                        <div>
+                            <div class="text-xl sm:text-3xl font-black text-cyber-red font-mono">24/7</div>
+                            <div class="text-[11px] text-cyber-muted uppercase tracking-wider mt-1" data-i18n="stat_support">Soporte Continuo</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOCKUP HERO EQUILIBRADO (SIN EXCESO DE BRILLO) -->
+                <div class="lg:col-span-5 relative flex justify-center items-center z-20">
+                    <div class="absolute w-72 h-72 rounded-full bg-purple-500/10 blur-2xl animate-pulse"></div>
+                    <div class="relative w-full max-w-md rounded-3xl p-8 glass-panel border border-purple-500/20 shadow-xl animate-float flex justify-center items-center">
+                        <img src="assets/img/isotipo_zentrix_morado-sin.png" alt="Zentrix GPS Isotipo" class="w-56 sm:w-72 object-contain opacity-90">
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- CARRUSEL INFINITO DE VEHÍCULOS (CORREGIDO Y SIN CORTES) -->
+        <section id="fleet" class="py-12 bg-cyber-bg/90 border-y border-cyber-border relative z-20 overflow-hidden">
+            <div class="text-center mb-8">
+                <h2 class="text-xs font-mono uppercase tracking-widest text-purple-500 font-bold" data-i18n="fleet_subtitle">COBERTURA INTEGRAL</h2>
+                <h3 class="text-2xl font-black text-cyber-text" data-i18n="fleet_title">Protegemos Todo Tipo de Unidades</h3>
+            </div>
+            
+            <div class="overflow-hidden whitespace-nowrap relative flex w-full">
+                <div class="marquee-container flex gap-6">
+                    <!-- Grupo 1 -->
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Camionetas 4x4 y SUVs</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Motocicletas y Alta Cilindrada</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Flotas Comerciales y Camiones</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Vehículos Sedanes y Particulares</span>
+                        </div>
+                    </div>
+
+                    <!-- Grupo 2 (Duplicado exacto para hacer el loop infinito perfecto) -->
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Camionetas 4x4 y SUVs</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Motocicletas y Alta Cilindrada</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Flotas Comerciales y Camiones</span>
+                        </div>
+                    </div>
+                    <div class="relative flex-shrink-0 w-72 h-40 rounded-2xl overflow-hidden border border-cyber-border group">
+                        <img src="https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?q=80&w=600&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-4">
+                            <span class="text-sm font-bold text-white font-mono">Vehículos Sedanes y Particulares</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: SERVICIOS -->
+        <section id="services" class="py-28 px-4 sm:px-6 relative z-20 border-t border-cyber-border">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <h2 class="text-xs font-mono uppercase tracking-widest text-purple-500 font-bold" data-i18n="services_subtitle">TECNOLOGÍA DE TELEMETRÍA</h2>
+                    <h3 class="text-3xl sm:text-5xl font-black text-cyber-text" data-i18n="services_title">Nuestros Servicios de Rastreo</h3>
+                    <p class="text-cyber-muted text-base" data-i18n="services_desc">Ofrecemos control absoluto sobre la seguridad de tu vehículo o flota comercial.</p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-500 mb-6 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all">
+                            <i data-lucide="map-pin" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_1_title">Ubicación en Tiempo Real</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_1_desc">Sigue el recorrido exacto de tus unidades con actualización constante de posición, velocidad y ruta 24/7.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-cyber-red/15 border border-cyber-red/30 flex items-center justify-center text-cyber-red mb-6 group-hover:scale-110 group-hover:bg-cyber-red group-hover:text-white transition-all">
+                            <i data-lucide="power" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_2_title">Apagado de Motor Remoto</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_2_desc">Inmoviliza tu vehículo de forma segura desde tu teléfono inteligente ante cualquier emergencia o hurto.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 mb-6 group-hover:scale-110 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                            <i data-lucide="shield-alert" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_3_title">Geocercas & Alertas</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_3_desc">Define perímetros virtuales seguros y recibe notificaciones instantáneas si el vehículo sale de la zona.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-500 mb-6 group-hover:scale-110 group-hover:bg-purple-500 group-hover:text-white transition-all">
+                            <i data-lucide="history" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_4_title">Historial de Recorridos</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_4_desc">Consulta rutas previas, paradas realizadas, tiempos de inactividad y kilometraje acumulado.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-500 mb-6 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                            <i data-lucide="smartphone" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_5_title">Multi-Plataforma</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_5_desc">Accede desde cualquier dispositivo Android, iOS o desde tu navegador web preferido con total fluidez.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl glass-panel-hover group relative">
+                        <div class="w-14 h-14 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-500 mb-6 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                            <i data-lucide="wrench" class="w-7 h-7"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-3" data-i18n="serv_6_title">Instalación Profesional</h4>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="serv_6_desc">Técnicos expertos realizan montajes 100% ocultos, limpios y seguros sin afectar el sistema eléctrico original.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN ESTADÍSTICAS / MONITOREO EN VIVO (FONDO TECNOLÓGICO MEJORADO) -->
+        <section id="stats" class="py-28 px-4 sm:px-6 relative z-20 parallax-section border-t border-cyber-border overflow-hidden" style="background-image: linear-gradient(to bottom, var(--bg-main), rgba(8, 8, 12, 0.85), var(--bg-main)), url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80');">
+            <div class="max-w-7xl mx-auto relative z-10">
+                <div class="text-center max-w-3xl mx-auto mb-16 space-y-3">
+                    <h2 class="text-xs font-mono uppercase tracking-widest text-purple-400 font-bold">INFRAESTRUCTURA GLOBAL</h2>
+                    <h3 class="text-3xl sm:text-4xl font-black text-cyber-text">Monitoreo Satelital de Alto Rendimiento</h3>
+                </div>
+                
+                <div class="grid md:grid-cols-4 gap-8 text-center">
+                    <div class="glass-panel p-8 rounded-3xl shadow-xl">
+                        <div class="text-4xl sm:text-5xl font-black text-purple-400 font-mono mb-2">99.9%</div>
+                        <div class="text-xs uppercase font-bold tracking-widest text-cyber-muted">Uptime Satelital</div>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl shadow-xl">
+                        <div class="text-4xl sm:text-5xl font-black text-purple-400 font-mono mb-2">&lt; 0.3s</div>
+                        <div class="text-xs uppercase font-bold tracking-widest text-cyber-muted">Latencia de Red</div>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl shadow-xl">
+                        <div class="text-4xl sm:text-5xl font-black text-purple-400 font-mono mb-2">5,000+</div>
+                        <div class="text-xs uppercase font-bold tracking-widest text-cyber-muted">Unidades Protegidas</div>
+                    </div>
+                    <div class="glass-panel p-8 rounded-3xl shadow-xl">
+                        <div class="text-4xl sm:text-5xl font-black text-purple-400 font-mono mb-2">24/7</div>
+                        <div class="text-xs uppercase font-bold tracking-widest text-cyber-muted">Monitoreo Constante</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: EQUIPO TÉCNICO -->
+        <section id="team" class="py-28 px-4 sm:px-6 relative z-20 border-t border-cyber-border">
+            <div class="max-w-7xl mx-auto">
+                <div class="text-center max-w-3xl mx-auto mb-20 space-y-4">
+                    <h2 class="text-xs font-mono uppercase tracking-widest text-purple-500 font-bold" data-i18n="team_subtitle">TALENTO HUMANO</h2>
+                    <h3 class="text-3xl sm:text-5xl font-black text-cyber-text" data-i18n="team_title">Especialistas Zentrix GPS</h3>
+                    <p class="text-cyber-muted text-base" data-i18n="team_desc">Profesionales capacitados en soporte técnico, atención al cliente e instalación electrónica automotriz.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="glass-panel p-8 rounded-3xl text-center border border-cyber-border hover:border-purple-500 transition-all group">
+                        <div class="w-24 h-24 rounded-full bg-purple-500/15 border-2 border-purple-500 flex items-center justify-center text-purple-500 font-black text-2xl mx-auto mb-6 group-hover:scale-105 transition-transform">
+                            OR
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-1">Ondayner Ramírez</h4>
+                        <p class="text-xs font-mono text-purple-500 uppercase font-bold mb-4" data-i18n="role_leader">Líder & Atención al Cliente</p>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="desc_leader">Encargado de la gestión operativa, desarrollo tecnológico y coordinación de proyectos de rastreo.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl text-center border border-cyber-border hover:border-purple-500 transition-all group">
+                        <div class="w-24 h-24 rounded-full bg-purple-500/15 border-2 border-purple-500 flex items-center justify-center text-purple-500 font-black text-2xl mx-auto mb-6 group-hover:scale-105 transition-transform">
+                            CS
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-1">Christian Sandrea</h4>
+                        <p class="text-xs font-mono text-purple-500 uppercase font-bold mb-4" data-i18n="role_tech1">Especialista en Instalación</p>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="desc_tech1">Técnico experto en cableado, conexión eléctrica automotriz y ocultamiento seguro de dispositivos GPS.</p>
+                    </div>
+
+                    <div class="glass-panel p-8 rounded-3xl text-center border border-cyber-border hover:border-purple-500 transition-all group">
+                        <div class="w-24 h-24 rounded-full bg-purple-500/15 border-2 border-purple-500 flex items-center justify-center text-purple-500 font-black text-2xl mx-auto mb-6 group-hover:scale-105 transition-transform">
+                            JF
+                        </div>
+                        <h4 class="text-xl font-bold text-cyber-text mb-1">Jhon Fajardo</h4>
+                        <p class="text-xs font-mono text-purple-500 uppercase font-bold mb-4" data-i18n="role_tech2">Especialista en Instalación</p>
+                        <p class="text-sm text-cyber-muted leading-relaxed" data-i18n="desc_tech2">Profesional capacitado en calibración de hardware, acople de relés y verificación de señal satelital.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 4: CONTACTO -->
+        <section id="contact" class="py-20 px-4 sm:px-6 relative z-20 border-t border-cyber-border">
+            <div class="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
+                <div class="lg:col-span-6 space-y-6">
+                    <div class="flex items-center gap-3">
+                        <img src="assets/img/logotio_zentrix_morado-sin.png" alt="Zentrix GPS" class="h-12 w-auto object-contain logo-glow-nav">
+                        <span class="font-extrabold text-xl text-cyber-text tracking-wider">ZENTRIX GPS</span>
+                    </div>
+
+                    <h3 class="text-3xl font-extrabold text-cyber-text" data-i18n="contact_title">¿Listo para proteger tu vehículo?</h3>
+                    <p class="text-cyber-muted text-base max-w-md" data-i18n="contact_desc">
+                        Contáctanos hoy mismo para coordinar la instalación de tu equipo GPS satelital con los mejores profesionales en Venezuela.
+                    </p>
+
+                    <div>
+                        <a id="btn-contact-wa" href="#" target="_blank" rel="noopener noreferrer" 
+                           class="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-emerald-500 text-white font-bold hover:scale-105 transition-all shadow-lg">
+                            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+                            </svg>
+                            <span data-i18n="whatsapp_btn">Contactar por WhatsApp</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-6 glass-panel p-8 rounded-3xl border border-cyber-border">
+                    <form id="contact-form" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-cyber-muted mb-1" data-i18n="label_name">NOMBRE COMPLETO</label>
+                            <input type="text" id="form-name" required class="w-full px-4 py-3 rounded-xl bg-cyber-bg border border-cyber-border text-cyber-text focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-cyber-muted mb-1" data-i18n="label_phone">TELÉFONO / WHATSAPP</label>
+                            <input type="tel" id="form-phone" required class="w-full px-4 py-3 rounded-xl bg-cyber-bg border border-cyber-border text-cyber-text focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-cyber-muted mb-1" data-i18n="label_vehicle">TIPO DE VEHÍCULO / SOLICITUD</label>
+                            <input type="text" id="form-vehicle" required placeholder="Ej. Carro / Moto / Flota Comercial" class="w-full px-4 py-3 rounded-xl bg-cyber-bg border border-cyber-border text-cyber-text focus:border-purple-500 focus:outline-none">
+                        </div>
+                        <button type="submit" class="w-full py-4 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold transition-all shadow-lg shadow-purple-600/30" data-i18n="btn_send">
+                            Enviar Solicitud
+                        </button>
+                    </form>
+                    <div id="contact-success" class="hidden text-xs text-purple-500 font-bold text-center mt-4 font-mono" data-i18n="msg_sent">
+                        ¡Gracias! Redirigiendo a WhatsApp con tu solicitud...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FOOTER CON DATOS DE CONTACTO VISIBLES Y CLAROS -->
+        <footer class="mt-auto border-t border-cyber-border bg-cyber-bg py-12 px-4 sm:px-6 relative z-20">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
+                <div class="space-y-3">
+                    <img src="assets/img/logotio_zentrix_morado-sin.png" alt="Zentrix GPS" class="h-10 w-auto object-contain logo-glow-nav">
+                    <p class="text-xs text-cyber-text leading-relaxed font-medium">
+                        Sistemas de telemetría y rastreo satelital GPS con cobertura integral en Venezuela.
+                    </p>
+                </div>
+
+                <div>
+                    <h5 class="text-xs font-mono uppercase text-purple-400 font-bold mb-3">Navegación</h5>
+                    <ul class="space-y-2 text-xs text-cyber-text font-semibold">
+                        <li><a href="#hero" class="hover:text-purple-400 transition-colors" data-i18n="nav_start">Inicio</a></li>
+                        <li><a href="#services" class="hover:text-purple-400 transition-colors" data-i18n="nav_services">Servicios</a></li>
+                        <li><a href="#fleet" class="hover:text-purple-400 transition-colors" data-i18n="nav_fleet">Flota</a></li>
+                        <li><a href="#team" class="hover:text-purple-400 transition-colors" data-i18n="nav_team">Equipo</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h5 class="text-xs font-mono uppercase text-purple-400 font-bold mb-3">Contacto Directo</h5>
+                    <ul class="space-y-3 text-xs text-cyber-text font-semibold">
+                        <li class="flex items-center gap-2.5">
+                            <i data-lucide="phone" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                            <a id="link-footer-phone" href="#" target="_blank" rel="noopener noreferrer" class="hover:text-purple-400 transition-colors">--</a>
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i data-lucide="mail" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                            <a id="link-footer-email" href="#" class="hover:text-purple-400 transition-colors">--</a>
+                        </li>
+                        <li class="flex items-center gap-2.5">
+                            <i data-lucide="map-pin" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                            <span id="text-footer-address">--</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h5 class="text-xs font-mono uppercase text-purple-400 font-bold mb-3">Legal</h5>
+                    <ul class="space-y-2 text-xs text-cyber-text font-semibold">
+                        <li><a target="_blank" href="views/terms.html" class="hover:text-purple-400 transition-colors">Política de Privacidad y Términos</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto pt-8 border-t border-cyber-border flex flex-col sm:flex-row justify-between items-center text-xs text-cyber-text font-mono gap-4 font-semibold">
+                <div id="text-copyright"></div>
+                <div>
+                    Desarrollado por <a id="link-developer" href="#" target="_blank" rel="noopener noreferrer" class="font-bold text-purple-400 hover:underline"></a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- SCRIPT PRINCIPAL -->
+    <script src="assets/js/main.js"></script>
+
+    <!-- CONFIGURACIÓN DINÁMICA Y FORMULARIO FUNCIONAL JS -->
+    <script type="module">
+        import { companyConfig } from './assets/config/company.js';
+
+        const titleEl = document.getElementById('site-title');
+        if (titleEl) titleEl.innerText = `${companyConfig.name} - Principal`;
+
+        const cleanPhone = companyConfig.phone.replace(/[^0-9]/g, '');
+        const phoneWithCode = cleanPhone.startsWith('0') ? '58' + cleanPhone.substring(1) : cleanPhone;
+        const waUrl = `https://wa.me/${phoneWithCode}?text=${encodeURIComponent(companyConfig.whatsappMessage)}`;
+
+        const btnFloatWa = document.getElementById('btn-float-wa');
+        if (btnFloatWa) btnFloatWa.href = waUrl;
+
+        const btnContactWa = document.getElementById('btn-contact-wa');
+        if (btnContactWa) btnContactWa.href = waUrl;
+
+        const linkHeader = document.getElementById('link-header-platform');
+        if (linkHeader) linkHeader.href = companyConfig.platformUrl;
+
+        const linkHero = document.getElementById('link-hero-platform');
+        if (linkHero) linkHero.href = companyConfig.platformUrl;
+
+        const linkMobile = document.getElementById('link-mobile-platform');
+        if (linkMobile) linkMobile.href = companyConfig.platformUrl;
+
+        const phoneEl = document.getElementById('link-footer-phone');
+        if (phoneEl) {
+            phoneEl.href = waUrl;
+            phoneEl.textContent = companyConfig.phone;
+        }
+
+        const emailEl = document.getElementById('link-footer-email');
+        if (emailEl) {
+            emailEl.href = `mailto:${companyConfig.email}`;
+            emailEl.textContent = companyConfig.email;
+        }
+
+        const addressEl = document.getElementById('text-footer-address');
+        if (addressEl) addressEl.textContent = companyConfig.address;
+
+        const copyEl = document.getElementById('text-copyright');
+        if (copyEl) copyEl.textContent = `© ${new Date().getFullYear()} ${companyConfig.name.toUpperCase()}. TODOS LOS DERECHOS RESERVADOS.`;
+
+        const devLink = document.getElementById('link-developer');
+        if (devLink) {
+            devLink.href = companyConfig.developerUrl;
+            devLink.textContent = companyConfig.developerName;
+        }
+
+        // Formulario de contacto funcional vía JavaScript (envía directo a WhatsApp corporativo)
+        const formEl = document.getElementById('contact-form');
+        if (formEl) {
+            formEl.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const name = document.getElementById('form-name').value;
+                const phone = document.getElementById('form-phone').value;
+                const vehicle = document.getElementById('form-vehicle').value;
+                const successMsg = document.getElementById('contact-success');
+
+                const customMsg = `Hola ${companyConfig.shortName}, deseo solicitar una instalación GPS:\n\n*Nombre:* ${name}\n*Teléfono:* ${phone}\n*Vehículo/Solicitud:* ${vehicle}`;
+                const encodedMsg = encodeURIComponent(customMsg);
+                
+                successMsg.classList.remove('hidden');
+
+                setTimeout(() => {
+                    window.location.href = `https://wa.me/${phoneWithCode}?text=${encodedMsg}`;
+                }, 1200);
+            });
+        }
+    </script>
+</body>
+</html>
